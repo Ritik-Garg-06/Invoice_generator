@@ -1,6 +1,6 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "calc.h"
 
 int main()
@@ -40,7 +40,7 @@ int main()
 
         case 4:
             system("clear");
-            UpdateData(fp, fp1, allOrders);
+            UpdateData(fp, allOrders);
             break;
 
         case 5:
@@ -49,18 +49,19 @@ int main()
             break;
 
         case 6:
+            system("clear");
             fp = fopen("RestaurentBill.txt", "w");
             fclose(fp);
             printf("\nData Cleared Sucessfully\n");
             break;
 
         case 7:
+            system("clear");
             printf("\nThanks for using :)\n");
             exit(0);
             break;
 
         default:
-
             printf("Sorry Invalid Option");
             break;
         }

@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct items
 {
@@ -74,29 +74,25 @@ void StartMenu()
     printf("\n6. Clear Database");
     printf("\n7. Exit");
 }
-
 void Generate_invoice(FILE *fp, struct orders ord)
 {
     int numberofOrders = 0, n = 0, total = 0;
     char saveBill;
 
-    fp = fopen("RestaurentBill.txt", "r");
+    fp = fopen("RestaurentBill.txt", "rb"); // Open in binary read mode to check existing orders
 
     if (fp != NULL)
     {
-
         fseek(fp, 0, SEEK_END);
-
         numberofOrders = ftell(fp) / sizeof(struct orders);
+        fclose(fp);
     }
 
     int inv = numberofOrders + 1;
 
-    fclose(fp);
-
     printf("Please Enter the name of the Customer\n");
     fgets(ord.customer, 50, stdin);
-    ord.customer[strlen(ord.customer) - 1] = 0;
+    ord.customer[strlen(ord.customer) - 1] = '\0';
 
     strcpy(ord.date, __DATE__);
 
@@ -109,7 +105,7 @@ void Generate_invoice(FILE *fp, struct orders ord)
         fgetc(stdin);
         printf("\n\nPlease Enter the item %d\t", i + 1);
         fgets(ord.itm[i].item, 20, stdin);
-        ord.itm[i].item[strlen(ord.itm[i].item) - 1] = 0;
+        ord.itm[i].item[strlen(ord.itm[i].item) - 1] = '\0';
 
         printf("\nPlease Enter the quantity of item:\t");
         scanf("%d", &ord.itm[i].qty);
@@ -128,16 +124,16 @@ void Generate_invoice(FILE *fp, struct orders ord)
     generateBillFooter(total);
 
     printf("\nDo you want to save the Bill [Y/N]\n");
-    scanf(" %s", &saveBill);
+    scanf(" %c", &saveBill);
 
     if (saveBill == 'Y' || saveBill == 'y')
     {
-        fp = fopen("RestaurentBill.txt", "a");
+        fp = fopen("RestaurentBill.txt", "ab"); // Open in binary append mode
         fwrite(&ord, sizeof(struct orders), 1, fp);
 
         if (fwrite != 0)
         {
-            printf("\nSucessfully Saved");
+            printf("\nSuccessfully Saved");
         }
         else
         {
@@ -150,7 +146,13 @@ void Generate_invoice(FILE *fp, struct orders ord)
 void ShowInvoice(FILE *fp, struct orders allOrders[])
 {
 
-    fp = fopen("RestaurentBill.txt", "r");
+    fp = fopen("RestaurentBill.txt", "rb");
+
+    if (fp == NULL)
+    {
+        printf("Error: Unable to open the file.\n");
+        return;
+    }
 
     printf("\n\t *******Your Previous Invoices********");
 
@@ -161,9 +163,8 @@ void ShowInvoice(FILE *fp, struct orders allOrders[])
         numberOfOrders++;
     }
 
-    printf("%d", numberOfOrders);
-
     fclose(fp);
+
     for (int i = 0; i < numberOfOrders; i++)
     {
         float tot = 0;
@@ -179,12 +180,13 @@ void ShowInvoice(FILE *fp, struct orders allOrders[])
 
 void SearchInvoice(FILE *fp, struct orders allOrders[])
 {
-    int searchby, billToFind, numberofOrders, invoiceFound = 0;
+    int searchby, billToFind, numberofOrders;
     char name[50];
+    int invoiceFound = 0; // Move this declaration here
 
     printf("\nWant to search with Invoice Number or Name \n Press 1 For Invoice No and Press 2 For Name\t");
     scanf("%d", &searchby);
-    getchar();	
+    getchar();
 
     if (searchby == 1)
     {
@@ -196,11 +198,11 @@ void SearchInvoice(FILE *fp, struct orders allOrders[])
     {
         printf("\nEnter the name of the Customer to Search:\t");
         fgets(name, 50, stdin);
-        name[strlen(name) - 1] = 0;
+        name[strcspn(name, "\n")] = '\0'; // Remove newline character
     }
 
     system("cls");
-    fp = fopen("RestaurentBill.txt", "r");
+    fp = fopen("RestaurentBill.txt", "rb");
     printf("\n\t *******Invoice of %s********", name);
 
     numberofOrders = 0;
@@ -215,7 +217,7 @@ void SearchInvoice(FILE *fp, struct orders allOrders[])
     for (int i = 0; i < numberofOrders; i++)
     {
         float tot = 0;
-        if ((!strcmp(allOrders[i].customer, name)) || i + 1 == billToFind)
+        if ((searchby == 1 && i + 1 == billToFind) || (searchby == 2 && !strcmp(allOrders[i].customer, name)))
         {
             generateBillHeader(allOrders[i].customer, allOrders[i].date, i + 1);
             for (int j = 0; j < allOrders[i].numOfItems; j++)
@@ -226,15 +228,15 @@ void SearchInvoice(FILE *fp, struct orders allOrders[])
             generateBillFooter(tot);
             invoiceFound = 1;
         }
-        if (!invoiceFound)
-	{
-            printf("\nSorry the Invoice of %s does not found\n", name);
-	    break;
-	}
+    }
+
+    if (!invoiceFound) // Move this check here, after going through all orders
+    {
+        printf("\nSorry the Invoice of %s does not found\n", name);
     }
 }
 
-void UpdateData(FILE *fp, FILE *fp1, struct orders allOrders[])
+void UpdateData(FILE *fp, struct orders allOrders[])
 {
     int invoiceFound = 0, n = 0, total = 0, searchby = 0, billToFind = 0;
     char name[50];
@@ -249,7 +251,6 @@ void UpdateData(FILE *fp, FILE *fp1, struct orders allOrders[])
         scanf("%d", &billToFind);
         getchar();
     }
-
     else
     {
         printf("\nEnter the name of the Customer to update:\t");
@@ -257,8 +258,16 @@ void UpdateData(FILE *fp, FILE *fp1, struct orders allOrders[])
         name[strlen(name) - 1] = 0;
     }
 
-    fp = fopen("RestaurentBill.txt", "r");
-    fp1 = fopen("temp.txt", "w");
+    // Open the file in read mode to check existing orders
+    fp = fopen("RestaurentBill.txt", "rb");
+
+    if (fp == NULL)
+    {
+        printf("Error: Unable to open the file.\n");
+        return;
+    }
+
+    FILE *fpTemp = fopen("temp.txt", "wb"); // Open the temporary file in write mode
 
     int numberofOrders = 0;
 
@@ -272,7 +281,8 @@ void UpdateData(FILE *fp, FILE *fp1, struct orders allOrders[])
     for (int i = 0; i < numberofOrders; i++)
     {
         float tot = 0;
-        if ((!strcmp(allOrders[i].customer, name)) || i + 1 == billToFind)
+
+        if ((searchby == 1 && i + 1 == billToFind) || (searchby == 2 && !strcmp(allOrders[i].customer, name)))
         {
             invoiceFound = 1;
             printf("Please Enter the number of items:\t");
@@ -284,7 +294,7 @@ void UpdateData(FILE *fp, FILE *fp1, struct orders allOrders[])
                 fgetc(stdin);
                 printf("\n\nPlease Enter the item %d\t", j + 1);
                 fgets(allOrders[i].itm[j].item, 20, stdin);
-                allOrders[i].itm[j].item[strlen(allOrders[i].itm[j].item) - 1] = 0;
+                allOrders[i].itm[j].item[strlen(allOrders[i].itm[j].item) - 1] = '\0';
 
                 printf("\nPlease Enter the quantity of item:\t");
                 scanf("%d", &allOrders[i].itm[j].qty);
@@ -296,29 +306,25 @@ void UpdateData(FILE *fp, FILE *fp1, struct orders allOrders[])
             }
         }
 
-        fwrite(&allOrders[i], sizeof(struct orders), 1, fp1);
+        fwrite(&allOrders[i], sizeof(struct orders), 1, fpTemp);
     }
 
-    fclose(fp1);
+    fclose(fpTemp);
 
     if (invoiceFound == 1)
     {
-        fp1 = fopen("temp.txt", "r");
-        fp = fopen("RestaurentBill.txt", "w");
+        // Remove the original file
+        remove("RestaurentBill.txt");
 
-        for (int i = 0; i < numberofOrders; i++)
-        {
-            fread(&allOrders[i], sizeof(struct orders), 1, fp1);
-            fwrite(&allOrders[i], sizeof(struct orders), 1, fp);
-        }
+        // Rename the temporary file to the original file name
+        rename("temp.txt", "RestaurentBill.txt");
 
         printf("\nData Updated Successfully\n");
-
-        fclose(fp);
-        fclose(fp1);
     }
     else
+    {
         printf("\nSorry the Invoice of %s does not found\n", name);
+    }
 }
 
 void DeleteRecord(FILE *fp, FILE *fp1, struct orders allOrders[])
@@ -344,8 +350,8 @@ void DeleteRecord(FILE *fp, FILE *fp1, struct orders allOrders[])
         name[strlen(name) - 1] = 0;
     }
 
-    fp = fopen("RestaurentBill.txt", "r");
-    fp1 = fopen("temp.txt", "w");
+    fp = fopen("RestaurentBill.txt", "rb");
+    fp1 = fopen("temp.txt", "wb");
 
     int numberofOrders = 0;
 
@@ -358,7 +364,7 @@ void DeleteRecord(FILE *fp, FILE *fp1, struct orders allOrders[])
 
     for (int i = 0; i < numberofOrders; i++)
     {
-        if (!strcmp(allOrders[i].customer, name) || i + 1 == billToFind)
+        if ((searchby == 1 && i + 1 == billToFind) || (searchby == 2 && !strcmp(allOrders[i].customer, name)))
             invoiceFound = 1;
         else
             fwrite(&allOrders[i], sizeof(struct orders), 1, fp1);
@@ -369,8 +375,8 @@ void DeleteRecord(FILE *fp, FILE *fp1, struct orders allOrders[])
     if (invoiceFound == 1)
     {
         numberofOrders--;
-        fp1 = fopen("temp.txt", "r");
-        fp = fopen("RestaurentBill.txt", "w");
+        fp1 = fopen("temp.txt", "rb");
+        fp = fopen("RestaurentBill.txt", "wb");
 
         for (int i = 0; i < numberofOrders; i++)
         {
