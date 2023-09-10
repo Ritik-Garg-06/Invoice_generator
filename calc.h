@@ -14,11 +14,15 @@ struct orders
 };
 
 void generateBillHeader(char name[50], char date[30], int inv);
-void DeleteRecord(FILE *fp, FILE *fp1, struct orders allOrders[]);
-void UpdateData(FILE *fp, FILE *fp1, struct orders allOrders[]);
-void SearchInvoice(FILE *fp, struct orders allOrders[]);
-void ShowInvoice(FILE *fp, struct orders allOrders[]);
-void Generate_invoice(FILE *fp, struct orders ord);
-void StartMenu();
-void generateBillFooter(float total);
 void generateBillBody(char *item, int qty, float price);
+void generateBillFooter(float total);
+void StartMenu();
+int Invalid_String(char *str);
+char *valid_String();
+int valid_int();
+void Generate_invoice(FILE *fp, struct orders ord);
+void ShowInvoice(FILE *fp, struct orders allOrders[]);
+void SearchInvoice(FILE *fp, struct orders allOrders[]);
+void UpdateData(FILE *fp, struct orders allOrders[]);
+void DeleteRecord(FILE *fp, FILE *fp1, struct orders allOrders[]);
+char ContinueOperation();

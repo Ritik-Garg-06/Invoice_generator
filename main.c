@@ -1,16 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "calc.h"
 
 int main()
 {
     struct orders ord;
     struct orders allOrders[50];
-    char contflag = 'Y';
+    char contflag = 'y';
     FILE *fp, *fp1;
 
-    while (contflag == 'y' || contflag == 'Y')
+    while (contflag == 'y')
     {
 
         StartMenu();
@@ -18,45 +19,47 @@ int main()
         int opt = 0;
 
         printf("\n\nYour Choice\t");
-        scanf("%d", &opt);
+
+        opt = valid_int();
+
         getchar();
 
         switch (opt)
         {
         case 1:
-            system("clear");
+            system("cls");
             Generate_invoice(fp, ord);
             break;
 
         case 2:
-            system("clear");
+            system("cls");
             ShowInvoice(fp, allOrders);
             break;
 
         case 3:
-            system("clear");
+            system("cls");
             SearchInvoice(fp, allOrders);
             break;
 
         case 4:
-            system("clear");
+            system("cls");
             UpdateData(fp, allOrders);
             break;
 
         case 5:
-            system("clear");
+            system("cls");
             DeleteRecord(fp, fp1, allOrders);
             break;
 
         case 6:
-            system("clear");
+            system("cls");
             fp = fopen("RestaurentBill.txt", "w");
             fclose(fp);
             printf("\nData Cleared Sucessfully\n");
             break;
 
         case 7:
-            system("clear");
+            system("cls");
             printf("\nThanks for using :)\n");
             exit(0);
             break;
@@ -66,8 +69,7 @@ int main()
             break;
         }
 
-        printf("\n\nDo you want to Perform another operation? [y/n]\t");
-        scanf(" %c", &contflag);
+        contflag = ContinueOperation();
     }
     printf("\nThanks for using :)\n");
 

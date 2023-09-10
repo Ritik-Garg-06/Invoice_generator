@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 struct items
 {
     char item[20];
-    float price;
+    int price;
     int qty;
 };
 
@@ -34,11 +35,11 @@ void generateBillHeader(char name[50], char date[30], int inv)
     printf("\n\n");
 }
 
-void generateBillBody(char *item, int qty, float price)
+void generateBillBody(char *item, int qty, int price)
 {
     printf("%s\t\t", item);
     printf("%d\t\t", qty);
-    printf("%.2f\t\t", qty * price);
+    printf("%.2f\t\t", qty * (float)price);
     printf("\n");
 }
 
@@ -74,9 +75,65 @@ void StartMenu()
     printf("\n6. Clear Database");
     printf("\n7. Exit");
 }
+
+int Invalid_String(char *str)
+{
+    for (int i = 0; str[i] != '\0'; i++)
+    {
+        if (!((str[i] >= 65 && str[i] <= 90) || (str[i] >= 97 && str[i] <= 122) || str[i] == 32 || str[i] == 10))
+            return 1;
+    }
+    return 0;
+}
+
+char *valid_String()
+{
+    char *temp = (char *)malloc(100 * sizeof(char));
+    while (1)
+    {
+        if (fgets(temp, 100, stdin) != NULL)
+        {
+            temp[strcspn(temp, "\n")] = '\0'; // Remove newline character
+
+            if (Invalid_String(temp) == 1)
+            {
+                printf("\nInvalid String Please Enter a valid String\n");
+            }
+            else
+            {
+                return temp;
+            }
+        }
+        else
+        {
+            printf("\nError reading input.\n");
+            free(temp);
+            exit(1); // Handle input error
+        }
+    }
+}
+
+int valid_int()
+{
+    int opt = 0;
+    while (1)
+    {
+        if (scanf("%d", &opt) != 1)
+        {
+            printf("\nEnter a valid numeric input\n");
+            while (getchar() != '\n')
+                ;
+        }
+        else
+        {
+            return opt;
+        }
+    }
+}
+
 void Generate_invoice(FILE *fp, struct orders ord)
 {
-    int numberofOrders = 0, n = 0, total = 0;
+    int numberofOrders = 0, total = 0, Invalid_Input = 0, n = 0;
     char saveBill;
 
     fp = fopen("RestaurentBill.txt", "rb"); // Open in binary read mode to check existing orders
@@ -91,27 +148,30 @@ void Generate_invoice(FILE *fp, struct orders ord)
     int inv = numberofOrders + 1;
 
     printf("Please Enter the name of the Customer\n");
-    fgets(ord.customer, 50, stdin);
-    ord.customer[strlen(ord.customer) - 1] = '\0';
+
+    strcpy(ord.customer, valid_String());
 
     strcpy(ord.date, __DATE__);
 
-    printf("Please Enter the number of items:\t");
-    scanf("%d", &n);
-    ord.numOfItems = n;
+    printf("Please Enter the number of items\n");
 
+    n = valid_int();
+
+    ord.numOfItems = n;
     for (int i = 0; i < n; i++)
     {
         fgetc(stdin);
         printf("\n\nPlease Enter the item %d\t", i + 1);
-        fgets(ord.itm[i].item, 20, stdin);
-        ord.itm[i].item[strlen(ord.itm[i].item) - 1] = '\0';
+
+        strcpy(ord.itm[i].item, valid_String());
 
         printf("\nPlease Enter the quantity of item:\t");
-        scanf("%d", &ord.itm[i].qty);
+
+        ord.itm[i].qty = valid_int();
 
         printf("\nPlease enter the unit price:\t");
-        scanf("%f", &ord.itm[i].price);
+
+        ord.itm[i].price = valid_int();
 
         total += ord.itm[i].qty * ord.itm[i].price;
     }
@@ -180,30 +240,27 @@ void ShowInvoice(FILE *fp, struct orders allOrders[])
 
 void SearchInvoice(FILE *fp, struct orders allOrders[])
 {
-    int searchby, billToFind, numberofOrders;
+    int searchby, billToFind, numberofOrders, Invalid_Input = 0;
     char name[50];
     int invoiceFound = 0; // Move this declaration here
 
     printf("\nWant to search with Invoice Number or Name \n Press 1 For Invoice No and Press 2 For Name\t");
-    scanf("%d", &searchby);
+    searchby = valid_int();
     getchar();
 
     if (searchby == 1)
     {
         printf("\nEnter the Invoice Number\t");
-        scanf("%d", &billToFind);
-        getchar();
+        billToFind = valid_int();
     }
-    else
+    else if (searchby == 2)
     {
         printf("\nEnter the name of the Customer to Search:\t");
-        fgets(name, 50, stdin);
-        name[strcspn(name, "\n")] = '\0'; // Remove newline character
+        strcpy(name, valid_String());
     }
 
     system("cls");
     fp = fopen("RestaurentBill.txt", "rb");
-    printf("\n\t *******Invoice of %s********", name);
 
     numberofOrders = 0;
 
@@ -217,7 +274,7 @@ void SearchInvoice(FILE *fp, struct orders allOrders[])
     for (int i = 0; i < numberofOrders; i++)
     {
         float tot = 0;
-        if ((searchby == 1 && i + 1 == billToFind) || (searchby == 2 && !strcmp(allOrders[i].customer, name)))
+        if ((searchby == 1 && i + 1 == billToFind) || (searchby == 2 && strcmp(allOrders[i].customer, name) == 0))
         {
             generateBillHeader(allOrders[i].customer, allOrders[i].date, i + 1);
             for (int j = 0; j < allOrders[i].numOfItems; j++)
@@ -242,20 +299,18 @@ void UpdateData(FILE *fp, struct orders allOrders[])
     char name[50];
 
     printf("\nWant to search with Invoice Number or Name \n Press 1 For Invoice No and Press 2 For Name\t");
-    scanf("%d", &searchby);
+    searchby = valid_int();
     getchar();
 
     if (searchby == 1)
     {
         printf("\nEnter the Invoice Number\t");
-        scanf("%d", &billToFind);
-        getchar();
+        billToFind = valid_int();
     }
-    else
+    else if (searchby == 2)
     {
-        printf("\nEnter the name of the Customer to update:\t");
-        fgets(name, 50, stdin);
-        name[strlen(name) - 1] = 0;
+        printf("\nEnter the name of the Customer to Search:\t");
+        strcpy(name, valid_String());
     }
 
     // Open the file in read mode to check existing orders
@@ -285,24 +340,27 @@ void UpdateData(FILE *fp, struct orders allOrders[])
         if ((searchby == 1 && i + 1 == billToFind) || (searchby == 2 && !strcmp(allOrders[i].customer, name)))
         {
             invoiceFound = 1;
-            printf("Please Enter the number of items:\t");
-            scanf("%d", &n);
-            allOrders[i].numOfItems = n;
+            printf("Please Enter the number of items\n");
 
-            for (int j = 0; j < n; j++)
+            n = valid_int();
+
+            allOrders[i].numOfItems = n;
+            for (int i = 0; i < n; i++)
             {
                 fgetc(stdin);
-                printf("\n\nPlease Enter the item %d\t", j + 1);
-                fgets(allOrders[i].itm[j].item, 20, stdin);
-                allOrders[i].itm[j].item[strlen(allOrders[i].itm[j].item) - 1] = '\0';
+                printf("\n\nPlease Enter the item %d\t", i + 1);
+
+                strcpy(allOrders[i].itm[i].item, valid_String());
 
                 printf("\nPlease Enter the quantity of item:\t");
-                scanf("%d", &allOrders[i].itm[j].qty);
+
+                allOrders[i].itm[i].qty = valid_int();
 
                 printf("\nPlease enter the unit price:\t");
-                scanf("%f", &allOrders[i].itm[j].price);
 
-                total += allOrders[i].itm[j].qty * allOrders[i].itm[j].price;
+                allOrders[i].itm[i].price = valid_int();
+
+                total += allOrders[i].itm[i].qty * allOrders[i].itm[i].price;
             }
         }
 
@@ -333,21 +391,18 @@ void DeleteRecord(FILE *fp, FILE *fp1, struct orders allOrders[])
     char name[50];
 
     printf("\nWant to search with Invoice Number or Name \n Press 1 For Invoice No and Press 2 For Name\t");
-    scanf("%d", &searchby);
+    searchby = valid_int();
     getchar();
 
     if (searchby == 1)
     {
         printf("\nEnter the Invoice Number\t");
-        scanf("%d", &billToFind);
-        getchar();
+        billToFind = valid_int();
     }
-
-    else
+    else if (searchby == 2)
     {
-        printf("\nEnter the name of the Customer to update:\t");
-        fgets(name, 50, stdin);
-        name[strlen(name) - 1] = 0;
+        printf("\nEnter the name of the Customer to Search:\t");
+        strcpy(name, valid_String());
     }
 
     fp = fopen("RestaurentBill.txt", "rb");
@@ -390,5 +445,30 @@ void DeleteRecord(FILE *fp, FILE *fp1, struct orders allOrders[])
         fclose(fp1);
     }
     else
-        printf("\nSorry the Invoice of %s does not found\n", name);
+        printf("\nSorry the Invoice not found\n");
+}
+
+char ContinueOperation()
+{
+    char choice[50];
+    printf("\n\nDo you want to perform another operation? [y/n]\t");
+
+    while (1)
+    {
+        scanf(" %s", choice);
+
+        if (strlen(choice) == 1)
+        {
+            if (choice[0] == 'y' || choice[0] == 'Y')
+            {
+                return 'y';
+            }
+            else if (choice[0] == 'n' || choice[0] == 'N')
+            {
+                return 'n';
+            }
+        }
+
+        printf("Invalid input. Please enter 'y' or 'n': ");
+    }
 }
