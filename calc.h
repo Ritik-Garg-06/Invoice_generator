@@ -19,6 +19,7 @@ void generateBillFooter(float total);
 void StartMenu();
 int Invalid_String(char *str);
 char *valid_String();
+char BillDone();
 int valid_int();
 void Generate_invoice(FILE *fp, struct orders ord);
 void ShowInvoice(FILE *fp, struct orders allOrders[]);
