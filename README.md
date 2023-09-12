@@ -1,26 +1,27 @@
-**Walmart Billing System**
+## Walmart Billing System
 The Walmart Billing System is a command-line application written in C that helps manage invoices for a retail store. It allows you to generate, view, search, update, and delete invoices. This README provides instructions on how to use the program effectively.
 
-**Table of Contents**
+## Table of Contents
 
-Installation
-Usage
-Features
-Contributing
+  Installation
+  Usage
+  Features
+  Contributing
 
-**Installation**
+## Installation
 1) Clone the repository to your local machine using the following command:
-
-  git clone https://github.com/yourusername/walmart-billing-system.git
-
+```bash
+  git clone https://github.com/Ritik-Garg-06/Invoice_generator.git
+```
 2) Compile the C program using a C compiler like GCC:
-   
+```bash
   gcc main.c -o walmart_billing
+```
 3) Run the program:
-
-./walmart_billing
-
-**Usage**
+```bash
+  ./walmart_billing
+```
+## Usage
 
 When you run the program, you will see a main menu with several options:
 
@@ -50,11 +51,11 @@ When you run the program, you will see a main menu with several options:
 6) Clearing the Database
   Option 6 allows you to clear all stored invoices. Use this option with caution, as it will permanently delete all data.
 
-**Features**
-Generate and manage invoices for a retail store.
-Search for invoices by invoice number or customer name.
-Update invoice data if errors are made.
-Delete specific invoices or clear the entire database.
+## Features
+  Generate and manage invoices for a retail store.
+  Search for invoices by invoice number or customer name.
+  Update invoice data if errors are made.
+  Delete specific invoices or clear the entire database.
 
-**Contributing**
+## Contributing
 Contributions are welcome! If you have any suggestions, improvements, or bug fixes, please open an issue or create a pull request.
